@@ -13,6 +13,7 @@ using std::string;
 
 class ThreadPool:noncopyable
 {
+public:
     typedef std::function<void()> Task;
     explicit ThreadPool(const string name = string());
     ~ThreadPool();

@@ -11,8 +11,8 @@
 using std::string;
 
 class Thread : noncopyable{
+public:
     typedef std::function<void()> ThreadFunc;
-
     explicit Thread(const ThreadFunc&,const string& name=string());
     ~Thread();
 
