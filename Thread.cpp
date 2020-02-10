@@ -1,7 +1,7 @@
 #pragma once
 
 #include"Thread.h"
-#include<assert>
+#include<assert.h>
 #include <errno.h>
 #include<utility>
 #include <unistd.h>
@@ -15,7 +15,7 @@ namespace CurrentThread
 __thread int t_cachedTid = 0;
 __thread char t_tidString[32];
 __thread int t_tidStringLength = 6;
-__thread const char* t_threadName = "default;
+__thread const char* t_threadName = "default";
 
 static_assert(std::is_same<int,pid_t>::value,"pid should be int");
 }
@@ -80,7 +80,7 @@ Thread::~Thread()
 {
     if(started_&&!joined_)
     {
-        pthread_detach(&pthreadId);
+        pthread_detach(pthreadId_);
     }
 }
 
@@ -97,7 +97,7 @@ void Thread::setDefaultName()
 void* startThread(void* obj)
 {
     //是否需要换成指针防止内存泄漏
-    ThreadData* data = static_cast<ThreadData*>(obj)
+    ThreadData* data = static_cast<ThreadData*>(obj);
     data->runInThread();
     delete data;
     return NULL;
@@ -105,10 +105,10 @@ void* startThread(void* obj)
 
 void Thread::start()
 {
-    assert(!started_)
+    assert(!started_);
     started_ = true;
     ThreadData* data=new ThreadData(func_,name_,&tid_,&latch_);
-    if(pthread_create(&pthreadId,NULL,&startThread,data))
+    if(pthread_create(&pthreadId_,NULL,&startThread,data))
     {
         started_ = false;
         delete data;
@@ -125,5 +125,5 @@ int Thread::join()
     assert(started_);
     assert(!joined_);
     joined_ = true;
-    return pthread_join(&pthreadId,NULL);
+    return pthread_join(pthreadId_,NULL);
 }

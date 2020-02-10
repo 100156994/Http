@@ -1,9 +1,9 @@
 #pragma once
 
 #include<pthread.h>
-#include<assert>
+#include<assert.h>
 #include"noncopyable.h"
-
+#include"CurrentThread.h"
 
 class MutexLock : noncopyable{
 
@@ -11,13 +11,13 @@ public:
     MutexLock()
         :holder_(0)
     {
-        pthread_mutex_init(&mutex_,NULL)
+        pthread_mutex_init(&mutex_,NULL);
     }
 
     ~MutexLock()
     {
         assert(holder_==0);
-        pthread_mutex_destory(&mutex_);
+        pthread_mutex_destroy(&mutex_);
     }
     bool isLockedByThisThread()
     {
@@ -53,7 +53,7 @@ private:
 class MutexLockGuard : noncopyable{
 public:
     explicit MutexLockGuard(MutexLock & mutex)
-        :mutex_(mutex);
+        :mutex_(mutex)
     {
         mutex_.lock();
     }

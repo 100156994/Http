@@ -12,9 +12,12 @@ void threadFunc()
     int k=10;
     while(k--)
     {
-         MutexLockGuard lock(mutex);
-        ++num;
-        printf("tid=%d num=%d\n", CurrentThread::tid(),num);
+        {
+            MutexLockGuard lock(mutex);
+            ++num;
+            printf("tid=%d num=%d\n", CurrentThread::tid(),num);
+        }
+	sleep(1);
     }
 
 }
@@ -22,8 +25,8 @@ void threadFunc()
 
 int main()
 {
-    Thread t1=Thread(threadFunc());
-    Thread t2=Thread(threadFunc());
+    Thread t1(threadFunc);
+    Thread t2(threadFunc);
     t1.start();
     t2.start();
 
