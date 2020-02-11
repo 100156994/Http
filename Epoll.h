@@ -23,6 +23,7 @@ public:
     void poll(int timeoutMs,ChannelList* activeChannels);
     void updateChannel(Channel *);//删除只是不在监听 在map中保留
     void removeChannel(Channel *);//从map中删除
+    bool hasChannel(Channel*);
 
     //
     void assertInLoopThread(){loop_->assertInLoopThread();}

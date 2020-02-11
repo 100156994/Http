@@ -104,6 +104,13 @@ void Epoller::removeChannel(Channel* channel)
     channel.set_index(kNew);
 }
 
+bool EventLoop::hasChannel(Channel* channel)
+{
+    assertInLoopThread();
+    ChannelMap::const_iterator it = channels_.find(channel->fd());
+    return it != channels_.end() && it->second == channel;
+}
+
 
 void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
 {
