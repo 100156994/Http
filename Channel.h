@@ -2,9 +2,11 @@
 #pragma once
 #include<functional>
 #include"noncopyable.h"
-
+#include<string>
 class EventLoop;
 
+
+using std::string;
 //负责一个fd的事件分发 但不负责fd的关闭
 class Channel : noncopyable
 {
@@ -29,6 +31,7 @@ public:
     }
     int fd() const { return fd_; }
     int events() const { return events_; }
+    int revents() const { return revents_; }
     void set_revents(int revt) { revents_ = revt; } // used by pollers
 
     bool isNoneEvent() const { return events_ == kNoneEvent; }
@@ -51,6 +54,8 @@ public:
     }
     void remove();
 private:
+    static string eventsToString(int fd,int ev);
+
     void update();
     static const int kNoneEvent;
     static const int kReadEvent;
@@ -58,8 +63,8 @@ private:
 
     EventLoop* loop_;
     const int fd_;
-    int event_;
-    int revent_;
+    int events_;
+    int revents_;
     int index_;//epoller中map的key
 
     bool eventHandling_;

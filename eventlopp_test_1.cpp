@@ -10,7 +10,7 @@ EventLoop* g_loop;
 void callback()
 {
   printf("callback(): pid = %d, tid = %d\n", getpid(), CurrentThread::tid());
-  EventLoop anotherLoop;
+  //EventLoop anotherLoop;
 }
 
 void callback1()
@@ -27,18 +27,19 @@ void threadFunc()
   EventLoop loop;
   assert(EventLoop::getEventLoopOfCurrentThread() == &loop);
   loop.runAfter(1.0, callback);
-  gloop->runAfter(1.0,callback1);
+  //g_loop->runAfter(1.0,callback1);
   loop.loop();
 }
 
 int main()
 {
   printf("main(): pid = %d, tid = %d\n", getpid(), CurrentThread::tid());
-
   assert(EventLoop::getEventLoopOfCurrentThread() == NULL);
+  printf("create loop\n");
   EventLoop loop;
+  
   assert(EventLoop::getEventLoopOfCurrentThread() == &loop);
-
+  printf("create thread\n");
   Thread thread(threadFunc);
   thread.start();
 

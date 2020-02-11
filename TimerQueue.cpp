@@ -3,10 +3,12 @@
 #include<functional>
 #include<string.h>
 #include <sys/timerfd.h>
+#include<sys/time.h>
+#include<unistd.h>
 
 namespace detail
 {
-    const int kMicroSecondsPerSecond = 100 0000;
+    const int kMicroSecondsPerSecond = 1000000;
 
     size_t addTime(size_t now, double seconds)
     {
@@ -36,7 +38,7 @@ namespace detail
 
     struct timespec howMuchTimeFromNow(size_t expired)
     {
-        size_t mircoSeconds = expired - now():
+        size_t mircoSeconds = expired - now();
         if(mircoSeconds<100)
         {
             mircoSeconds = 100;//最近的定时改变为100微秒
@@ -51,10 +53,10 @@ namespace detail
     {
         struct itimerspec newValue;
         struct itimerspec oldValue;
-        memset(newValue,0,sizeof(newValue));
-        memset(oldValue,0,sizeof(oldValue));
+        memset(&newValue,0,sizeof(newValue));
+        memset(&oldValue,0,sizeof(oldValue));
         newValue.it_value =howMuchTimeFromNow(expired);
-        int ret=timerfd_settime(timerfd,0,newValue,oldValue);
+        int ret=timerfd_settime(timerfd,0,&newValue,&oldValue);
         if(ret){
             //error  to-do
 
@@ -70,6 +72,7 @@ namespace detail
             //error log
         }
     }
+    size_t now();
 }
 
 using namespace detail;
@@ -80,7 +83,7 @@ TimerQueue::TimerQueue(EventLoop* loop)
      timerfdChannel_(loop_,timerfd_),
      isCallingExpiredTimers_(false)
 {
-    timerfdChannel_.setReadCallback(std::bind(&TimerQueue.handleRead,this));
+    timerfdChannel_.setReadCallback(std::bind(&TimerQueue::handleRead,this));
     timerfdChannel_.enableReading();
 }
 
@@ -103,13 +106,14 @@ TimerQueue::~TimerQueue()
 TimerId TimerQueue::addTimer(TimerCallback cb, size_t when, double interval)
 {
     Timer* timer = new Timer(std::move(cb),when,interval);
-    loop_->runInLoop(std::bind(&TimerQueue::addTimerInLoop,&this,timer));
+    loop_->runInLoop(
+		std::bind(&TimerQueue::addTimerInLoop,this,timer));
     return TimerId(timer,timer->sequence());
 }
 
 void TimerQueue::cancelTimer(TimerId timerId)
 {
-    loop_->runInLoop(std::bind(&TimerQueue::cancelTimerInloop,&this,timerId);
+    loop_->runInLoop(std::bind(&TimerQueue::cancelTimerInloop,this,timerId));
 }
 
 
@@ -126,7 +130,7 @@ void TimerQueue::addTimerInLoop(Timer* timer)
 
 void TimerQueue::cancelTimerInloop(TimerId timerId)
 {
-    loop_.assertInLoopThread();
+    loop_->assertInLoopThread();
     assert(timers_.size() == activeTimers_.size());
 
     ActiveTimer atimer(timerId.timer_,timerId.sequence_);
@@ -170,13 +174,13 @@ bool TimerQueue::insertTimer(Timer* timer)
         assert(ret.second);
     }
     assert(timers_.size()==activeTimers_.size());
-    return earliestChanged
+    return earliestChanged;
 }
 
 void TimerQueue::handleRead()
 {
-    loop_.assertInLoopThread();
-    size_t now = now();
+    loop_->assertInLoopThread();
+    size_t now = detail::now();
     readTimerfd(timerfd_,now);
 
     //获得过期的timer
@@ -197,22 +201,22 @@ void TimerQueue::handleRead()
 }
 
 
-std::vector<TimerQueue::Entry> getExpired(size_t now)
+std::vector<TimerQueue::Entry> TimerQueue::getExpired(size_t now)
 {
-    loop_.assertInLoopThread();
+    loop_->assertInLoopThread();
     assert(timers_.size()==activeTimers_.size());
 
-    std::vector<TimerQueue::Entry> expiredTimers;
+    std::vector<Entry> expiredTimers;
     Entry sentry(now,reinterpret_cast<Timer*>(UINTPTR_MAX));
-    TimerList::iterator end =timers_.lower_bound(sentry);
-    assert(end == timers_.end() || now < end->first);
+    TimerList::iterator it =timers_.lower_bound(sentry);
+    assert(it == timers_.end() || now < it->first);
 
-    std::copy(timers_.begin(),end,back_inserter(expiredTimers));
-    timers_.erase(timers_.begin(),end);
+    std::copy(timers_.begin(),it,back_inserter(expiredTimers));
+    timers_.erase(timers_.begin(),it);
 
-    for(const Entry& it:expiredTimers)
+    for(const Entry& itt:expiredTimers)
     {
-        ActiveTimer atimer(it.seconde,it.seoncde->sequence);
+        ActiveTimer atimer(itt.second,itt.second->sequence());
         size_t n = activeTimers_.erase(atimer);
         assert(n==1);
     }
@@ -220,7 +224,7 @@ std::vector<TimerQueue::Entry> getExpired(size_t now)
     return expiredTimers;
 }
 
-void reset(const std::vector<TimerQueue::Entry>& expiredTimers,size_t now)
+void TimerQueue::reset(const std::vector<Entry>& expiredTimers,size_t now)
 {
     size_t nextExpire;
 
@@ -230,7 +234,7 @@ void reset(const std::vector<TimerQueue::Entry>& expiredTimers,size_t now)
         if(it.second->repeat()&&cancelTimers_.find(atimer)==cancelTimers_.end())
         {
             it.second->restart(addTime(now,it.second->interval()));
-            insert(it.second);
+            insertTimer(it.second);
         }else{
             delete it.second;
         }

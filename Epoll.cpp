@@ -1,8 +1,8 @@
 #include"Channel.h"
-
+#include"Epoll.h"
 #include <assert.h>
 #include <errno.h>
-#include <poll.h>
+
 #include <sys/epoll.h>
 #include <unistd.h>
 
@@ -33,9 +33,9 @@ void Epoller::poll(int timeoutMs,ChannelList* activeChannels)
     if(eventsNum>0)//成功
     {
         fillActiveChannels(eventsNum,activeChannels);
-        if(static_cast<int>(events_.size()) = eventsNum )
+        if(static_cast<int>(events_.size()) == eventsNum )
         {
-            events_resize(events_.size()*2);
+            events_.resize(events_.size()*2);
         }
     }else if(eventsNum==0)//超时
     {
@@ -65,19 +65,19 @@ void Epoller::updateChannel(Channel *channel)
             assert(channels_[fd] == channel);
         }
         channel->set_index(kAdded);
-        update(EPOLL_CLT_ADD,channel);
+        update(EPOLL_CTL_ADD,channel);
 
     }else//修改
     {
         int fd =channel->fd();
 
-        assert(channels_.find(channel)!=Channels_.end());
-        assert(Channels_[fd]==channel);
+        assert(channels_.find(fd)!=channels_.end());
+        assert(channels_[fd]==channel);
         assert(index==kAdded);
-        if(channel.isNoneEvent())
+        if(channel->isNoneEvent())
         {
             update(EPOLL_CTL_DEL,channel);
-            channel.set_index(kDeleted);
+            channel->set_index(kDeleted);
         }else
         {
             update(EPOLL_CTL_MOD,channel);
@@ -88,33 +88,35 @@ void Epoller::updateChannel(Channel *channel)
 void Epoller::removeChannel(Channel* channel)
 {
     assertInLoopThread();
-    int fd = channel.fd();
-    int index= channel.index();
-    assert(channels_.find(channel)!=Channels_.end());
-    assert(Channels_[fd]==channel);
+    int fd = channel->fd();
+    int index= channel->index();
+    assert(channels_.find(fd)!=channels_.end());
+    assert(channels_[fd]==channel);
     assert(index==kAdded||index==kDeleted);
 
-    size_t n = Channels_.erase(fd);
+    size_t n = channels_.erase(fd);
     assert(n==1);
 
     if(index==kAdded)
     {
         update(EPOLL_CTL_DEL,channel);
     }
-    channel.set_index(kNew);
+    channel->set_index(kNew);
 }
 
-bool EventLoop::hasChannel(Channel* channel)
+bool Epoller::hasChannel(Channel* channel)
 {
     assertInLoopThread();
     ChannelMap::const_iterator it = channels_.find(channel->fd());
     return it != channels_.end() && it->second == channel;
 }
 
+void Epoller::assertInLoopThread(){loop_->assertInLoopThread();}
+
 
 void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
 {
-    assert(static_cast<size_t>(numEvents) <= events_.size());
+    assert(static_cast<size_t>(eventsNum) <= events_.size());
     for(int i = 0; i < eventsNum; ++i)
     {
         Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
@@ -124,7 +126,7 @@ void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
         assert(it != channels_.end());
         assert(it->second == channel);
 #endif
-        Channel->set_revents(events_[i].events);
+        channel->set_revents(events_[i].events);
         activeChannels->push_back(channel);
     }
 }
@@ -133,7 +135,7 @@ void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
 void Epoller::update(int operation, Channel* channel)
 {
     struct epoll_event event;
-    event.events=channel->revent_;
+    event.events=channel->events();
     event.data.ptr=channel;
     const int fd =channel->fd();
     if(epoll_ctl(epollfd_,operation,fd,&event)<0)//error

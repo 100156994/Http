@@ -6,14 +6,14 @@
 
 
 const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = POLLIN | POLLPRI;
-const int Channel::kWriteEvent = POLLOUT;
+const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
+const int Channel::kWriteEvent = EPOLLOUT;
 
 Channel::Channel(EventLoop* loop, int fd)
     :loop_(loop_),
-     fd(fd),
-     event_(0),
-     revent_(0),
+     fd_(fd),
+     events_(0),
+     revents_(0),
      index_(-1),
      eventHandling_(false),
      addedToLoop_(false)
@@ -25,13 +25,13 @@ Channel::~Channel()
 {
   assert(!eventHandling_);
   assert(!addedToLoop_);
-  if (loop_->isInLoopThread())
+  if (loop_->isLoopInThread())
   {
     assert(!loop_->hasChannel(this));
   }
 }
 
-Channel::handleEvent()
+void Channel::handleEvent()
 {
     eventHandling_ = true;
     if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN))
@@ -43,8 +43,8 @@ Channel::handleEvent()
     }
     if (revents_ & EPOLLERR)
     {
-        if (errorHandler_)
-            errorHandler_();
+        if (errorCallback_)
+            errorCallback_();
         events_ = 0;
         return;
     }
@@ -88,20 +88,22 @@ string Channel::eventsToString(int fd, int ev)
 {
   std::ostringstream oss;
   oss << fd << ": ";
-  if (ev & POLLIN)
+  if (ev & EPOLLIN)
     oss << "IN ";
-  if (ev & POLLPRI)
+  if (ev & EPOLLPRI)
     oss << "PRI ";
-  if (ev & POLLOUT)
+  if (ev & EPOLLOUT)
     oss << "OUT ";
-  if (ev & POLLHUP)
+  if (ev & EPOLLHUP)
     oss << "HUP ";
-  if (ev & POLLRDHUP)
+  if (ev & EPOLLRDHUP)
     oss << "RDHUP ";
-  if (ev & POLLERR)
+  if (ev & EPOLLERR)
     oss << "ERR ";
-  if (ev & POLLNVAL)
-    oss << "NVAL ";
+  if (ev & EPOLLET)
+    oss << "ET ";
+  if(ev & EPOLLONESHOT)
+    oss << "ONESHOT ";
 
   return oss.str();
 }

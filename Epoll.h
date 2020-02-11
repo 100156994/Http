@@ -4,12 +4,12 @@
 #include<map>
 #include<vector>
 #include"noncopyable.h"
-
+#include"EventLoop.h"
 #include<vector>
 #include<map>
 struct epoll_event;
 class Channel;
-
+class EventLoop;
 
 //IO¸´ÓÃ  ²»ÓµÓÐChannel
 class Epoller : noncopyable
@@ -26,7 +26,7 @@ public:
     bool hasChannel(Channel*);
 
     //
-    void assertInLoopThread(){loop_->assertInLoopThread();}
+    void assertInLoopThread();
 
 private:
     void fillActiveChannels(int ,ChannelList* )const;
@@ -35,7 +35,7 @@ private:
     typedef std::vector<struct epoll_event> EventList;
     EventLoop* loop_;
     int epollfd_;
-    EventList events_
-    ChannelMap Channels_;
+    EventList events_;
+    ChannelMap channels_;
 
 };

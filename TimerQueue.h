@@ -17,7 +17,7 @@ class TimerQueue : noncopyable
 {
 public:
     using TimerCallback = std::function<void()>;
-    TimerQueue(EventLoop* loop)
+    TimerQueue(EventLoop* loop);
 
     ~TimerQueue();
 
@@ -36,8 +36,8 @@ private:
     void cancelTimerInloop(TimerId timerId);
     bool insertTimer(Timer*);//返回最早时间是否改变
     void handleRead();//定时到时调用
-    std::vector<TimerQueue::Entry> getExpired(size_t now);//移除过期定时器
-    void reset(const std::vector<TimerQueue::Entry>& expiredTimer,size_t now);
+    std::vector<Entry> getExpired(size_t now);//移除过期定时器
+    void reset(const std::vector<Entry>& expiredTimer,size_t now);
 
 
     EventLoop* loop_;
