@@ -6,14 +6,14 @@
 
 
 const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
-const int Channel::kWriteEvent = EPOLLOUT;
+const int Channel::kReadEvent = POLLIN | POLLPRI;
+const int Channel::kWriteEvent = POLLOUT;
 
 Channel::Channel(EventLoop* loop, int fd)
     :loop_(loop_),
-     fd_(fd),
-     events_(0),
-     revents_(0),
+     fd(fd),
+     event_(0),
+     revent_(0),
      index_(-1),
      eventHandling_(false),
      addedToLoop_(false)
@@ -25,33 +25,34 @@ Channel::~Channel()
 {
   assert(!eventHandling_);
   assert(!addedToLoop_);
-  if (loop_->isLoopInThread())
+  if (loop_->isInLoopThread())
   {
     assert(!loop_->hasChannel(this));
   }
 }
 
-void Channel::handleEvent()
+Channel::handleEvent(size_t receiveTime)
 {
     eventHandling_ = true;
     if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN))
     {
         //对方挂断且无数据可读
         events_ = 0;
-
+        //log
+        if(CloseCallback) CloseCallback();
         return;
     }
     if (revents_ & EPOLLERR)
     {
-        if (errorCallback_)
-            errorCallback_();
+        if (errorHandler_)
+            errorHandler_();
         events_ = 0;
         return;
     }
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
     {
         if(readCallback_)
-            readCallback_();
+            readCallback_(receiveTime);
     }
     if (revents_ & EPOLLOUT)
     {
@@ -88,22 +89,20 @@ string Channel::eventsToString(int fd, int ev)
 {
   std::ostringstream oss;
   oss << fd << ": ";
-  if (ev & EPOLLIN)
+  if (ev & POLLIN)
     oss << "IN ";
-  if (ev & EPOLLPRI)
+  if (ev & POLLPRI)
     oss << "PRI ";
-  if (ev & EPOLLOUT)
+  if (ev & POLLOUT)
     oss << "OUT ";
-  if (ev & EPOLLHUP)
+  if (ev & POLLHUP)
     oss << "HUP ";
-  if (ev & EPOLLRDHUP)
+  if (ev & POLLRDHUP)
     oss << "RDHUP ";
-  if (ev & EPOLLERR)
+  if (ev & POLLERR)
     oss << "ERR ";
-  if (ev & EPOLLET)
-    oss << "ET ";
-  if(ev & EPOLLONESHOT)
-    oss << "ONESHOT ";
+  if (ev & POLLNVAL)
+    oss << "NVAL ";
 
   return oss.str();
 }

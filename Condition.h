@@ -4,7 +4,7 @@
 #include<pthread.h>
 #include<time.h>
 #include<errno.h>
-#include<stdint.h>
+
 class Condition : noncopyable{
 public:
     explicit Condition(MutexLock& mutex)
@@ -15,7 +15,7 @@ public:
 
     ~Condition()
     {
-        pthread_cond_destroy(&cond_);
+        pthread_cond_destory(&cond_);
     }
 
     void wait()
@@ -25,14 +25,22 @@ public:
 
     void notify()
     {
-        pthread_cond_signal(&cond_);
+        pthread_cond_signal(&cond);
     }
 
     void notifyAll()
     {
-        pthread_cond_broadcast(&cond_);
+        pthread_cond_broadcast(&cond);
     }
-bool waitForSeconds(double seconds)
+
+    bool waitForSeconds(double seconds);
+
+private:
+    MutexLock& mutex_;
+    pthread_cond_t cond_;
+};
+
+bool Condition::waitForSeconds(double seconds)
 {
   struct timespec abstime;
   // FIXME: 系统时间可能被改?
@@ -44,13 +52,5 @@ bool waitForSeconds(double seconds)
   abstime.tv_sec += static_cast<time_t>((abstime.tv_nsec + nanoseconds) / kNanoSecondsPerSecond);
   abstime.tv_nsec = static_cast<long>((abstime.tv_nsec + nanoseconds) % kNanoSecondsPerSecond);
 
-  return ETIMEDOUT == pthread_cond_timedwait(&cond_, mutex_.getThreadMutex(), &abstime);
+  return ETIMEDOUT == pthread_cond_timedwait(&cond_, mutex_.getPthreadMutex(), &abstime);
 }
-    //bool waitForSeconds(double seconds);
-
-private:
-    MutexLock& mutex_;
-    pthread_cond_t cond_;
-};
-
-

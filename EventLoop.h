@@ -5,16 +5,13 @@
 #include"Channel.h"
 #include"TimerQueue.h"
 #include<functional>
-#include"MutexLock.h"
-#include<memory>
 
 
 class Epoller;
 class Channel;
-
 class TimerQueue;
 
-
+using namespace detail;
 
 class EventLoop
 {
@@ -26,8 +23,8 @@ public:
 
     //只能在创建线程调用
     void loop();
-    void runInLoop(Functor cb);
-    void queueInLoop(Functor cb);
+    void runInLoop(Functor& cb);
+    void queueInLoop(Functor& cb);
     size_t queueSize()const ;
 
     void quit();//跨线程调用有一定问题
@@ -58,7 +55,7 @@ public:
             abortNotInLoopThread();
         }
     }
-    static EventLoop* getEventLoopOfCurrentThread();
+    static EventLoop* getEventLoopOfCurrentThead();
 private:
     void abortNotInLoopThread();
     void doPendingFunctors();
@@ -85,4 +82,4 @@ private:
 
     mutable MutexLock mutex_;
     std::vector<Functor> pendingFunctors_;
-};
+}

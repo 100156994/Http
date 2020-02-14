@@ -1,15 +1,26 @@
 #include"Channel.h"
-#include"Epoll.h"
+
 #include <assert.h>
 #include <errno.h>
-
+#include <poll.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+
+#include"TimerQueue.h"
+
+namespace detail
+{
+    size_t now();
+}
+
+using namespace detail;
 
 const int EVENTSNUM = 16;//最初默认一次接收的事件最大值 到阈值翻倍
 const int kNew = -1;  //当前不在poll map中 没有被监听
 const int kAdded = 1; //在poll map中 监听
 const int kDeleted = 2; //在pool map，没有监听
+
+
 
 Epoller::Epoller(EventLoop* loop)
     :loop_(loop),
@@ -25,17 +36,19 @@ Epoller::~Epoller()
 }
 
 
-void Epoller::poll(int timeoutMs,ChannelList* activeChannels)
+size_t Epoller::poll(int timeoutMs,ChannelList* activeChannels)
 {
     assertInLoopThread();
     struct epoll_event event;
     int eventsNum=epoll_wait(epollfd_,&*events_.begin(),static_cast<int>(events_.size()),timeoutMs);
+
+    size_t receiveTime=now();
     if(eventsNum>0)//成功
     {
         fillActiveChannels(eventsNum,activeChannels);
-        if(static_cast<int>(events_.size()) == eventsNum )
+        if(static_cast<int>(events_.size()) = eventsNum )
         {
-            events_.resize(events_.size()*2);
+            events_resize(events_.size()*2);
         }
     }else if(eventsNum==0)//超时
     {
@@ -44,7 +57,7 @@ void Epoller::poll(int timeoutMs,ChannelList* activeChannels)
     {
         //log
     }
-
+    return receiveTime;
 }
 
 
@@ -65,19 +78,19 @@ void Epoller::updateChannel(Channel *channel)
             assert(channels_[fd] == channel);
         }
         channel->set_index(kAdded);
-        update(EPOLL_CTL_ADD,channel);
+        update(EPOLL_CLT_ADD,channel);
 
     }else//修改
     {
         int fd =channel->fd();
 
-        assert(channels_.find(fd)!=channels_.end());
-        assert(channels_[fd]==channel);
+        assert(channels_.find(channel)!=Channels_.end());
+        assert(Channels_[fd]==channel);
         assert(index==kAdded);
-        if(channel->isNoneEvent())
+        if(channel.isNoneEvent())
         {
             update(EPOLL_CTL_DEL,channel);
-            channel->set_index(kDeleted);
+            channel.set_index(kDeleted);
         }else
         {
             update(EPOLL_CTL_MOD,channel);
@@ -88,20 +101,20 @@ void Epoller::updateChannel(Channel *channel)
 void Epoller::removeChannel(Channel* channel)
 {
     assertInLoopThread();
-    int fd = channel->fd();
-    int index= channel->index();
-    assert(channels_.find(fd)!=channels_.end());
-    assert(channels_[fd]==channel);
+    int fd = channel.fd();
+    int index= channel.index();
+    assert(channels_.find(channel)!=Channels_.end());
+    assert(Channels_[fd]==channel);
     assert(index==kAdded||index==kDeleted);
 
-    size_t n = channels_.erase(fd);
+    size_t n = Channels_.erase(fd);
     assert(n==1);
 
     if(index==kAdded)
     {
         update(EPOLL_CTL_DEL,channel);
     }
-    channel->set_index(kNew);
+    channel.set_index(kNew);
 }
 
 bool Epoller::hasChannel(Channel* channel)
@@ -111,12 +124,10 @@ bool Epoller::hasChannel(Channel* channel)
     return it != channels_.end() && it->second == channel;
 }
 
-void Epoller::assertInLoopThread(){loop_->assertInLoopThread();}
-
 
 void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
 {
-    assert(static_cast<size_t>(eventsNum) <= events_.size());
+    assert(static_cast<size_t>(numEvents) <= events_.size());
     for(int i = 0; i < eventsNum; ++i)
     {
         Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
@@ -126,7 +137,7 @@ void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
         assert(it != channels_.end());
         assert(it->second == channel);
 #endif
-        channel->set_revents(events_[i].events);
+        Channel->set_revents(events_[i].events);
         activeChannels->push_back(channel);
     }
 }
@@ -135,7 +146,7 @@ void Epoller::fillActiveChannels(int eventsNum,ChannelList* activeChannels)const
 void Epoller::update(int operation, Channel* channel)
 {
     struct epoll_event event;
-    event.events=channel->events();
+    event.events=channel->revent_;
     event.data.ptr=channel;
     const int fd =channel->fd();
     if(epoll_ctl(epollfd_,operation,fd,&event)<0)//error

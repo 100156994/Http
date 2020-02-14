@@ -4,12 +4,12 @@
 #include<map>
 #include<vector>
 #include"noncopyable.h"
-#include"EventLoop.h"
+
 #include<vector>
 #include<map>
 struct epoll_event;
 class Channel;
-class EventLoop;
+
 
 //IO复用  不拥有Channel
 class Epoller : noncopyable
@@ -20,13 +20,13 @@ public:
     ~Epoller();
 
     //只能在loop线程调用
-    void poll(int timeoutMs,ChannelList* activeChannels);
+    size_t poll(int timeoutMs,ChannelList* activeChannels);
     void updateChannel(Channel *);//删除只是不在监听 在map中保留
     void removeChannel(Channel *);//从map中删除
     bool hasChannel(Channel*);
 
     //
-    void assertInLoopThread();
+    void assertInLoopThread(){loop_->assertInLoopThread();}
 
 private:
     void fillActiveChannels(int ,ChannelList* )const;
@@ -35,7 +35,7 @@ private:
     typedef std::vector<struct epoll_event> EventList;
     EventLoop* loop_;
     int epollfd_;
-    EventList events_;
-    ChannelMap channels_;
+    EventList events_
+    ChannelMap Channels_;
 
 };
