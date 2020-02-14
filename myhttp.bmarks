@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<BrowseTracker_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="ThreadPool.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="2085" topLine="6" />
+	</File>
+	<File name="TimerQueue.h" open="0" top="0" tabpos="0">
+		<Cursor position="253" topLine="9" />
+	</File>
+	<File name="Buffer.h" open="0" top="0" tabpos="0">
+		<Cursor position="7775" topLine="21" />
+	</File>
+	<File name="eventlopp_test.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="TcpServer.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="1906" topLine="26" />
+		<BrowseMarks positions="115,189,1753,1995,2085,2121,2176,3008" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Timer.h" open="0" top="0" tabpos="12">
+		<Cursor position="301" topLine="6" />
+		<BrowseMarks positions="266" />
+	</File>
+	<File name="Condition.h" open="0" top="0" tabpos="0">
+		<Cursor position="735" topLine="0" />
+	</File>
+	<File name="TimerId.h" open="0" top="0" tabpos="0">
+		<Cursor position="103" topLine="2" />
+	</File>
+	<File name="Thread.h" open="0" top="0" tabpos="0">
+		<Cursor position="329" topLine="0" />
+		<BrowseMarks positions="196" />
+	</File>
+	<File name="eventlopp_test_1.cpp" open="0" top="0" tabpos="7">
+		<Cursor position="413" topLine="12" />
+	</File>
+	<File name="Acceptor.cpp" open="1" top="0" tabpos="0">
+		<Cursor position="0" topLine="36" />
+		<BrowseMarks positions="" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="ThreadPool.h" open="0" top="0" tabpos="0">
+		<Cursor position="237" topLine="0" />
+		<BrowseMarks positions="235" />
+	</File>
+	<File name="StringPiece.h" open="0" top="0" tabpos="0">
+		<Cursor position="80" topLine="0" />
+	</File>
+	<File name="Timer.cpp" open="0" top="0" tabpos="11">
+		<Cursor position="69" topLine="0" />
+	</File>
+	<File name="Socket.h" open="1" top="0" tabpos="1">
+		<Cursor position="180" topLine="0" />
+		<BrowseMarks positions="161,451,581,850,899" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="TimerQueue.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3042" topLine="2" />
+	</File>
+	<File name="Buffer.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="960" topLine="3" />
+	</File>
+	<File name="EventLoopThreadPool.cpp" open="0" top="0" tabpos="16">
+		<Cursor position="83" topLine="27" />
+		<BrowseMarks positions="245,267,346,459,521,545,595,788,838,878,996,1107,1143,1314,1337,1461,1517,1535" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Acceptor.h" open="0" top="0" tabpos="7">
+		<Cursor position="0" topLine="0" />
+		<BrowseMarks positions="" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Callback.h" open="1" top="0" tabpos="6">
+		<Cursor position="754" topLine="0" />
+		<BrowseMarks positions="501,587" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="CurrentThread.h" open="0" top="0" tabpos="9">
+		<Cursor position="220" topLine="0" />
+	</File>
+	<File name="EventLoopThreadPool.h" open="0" top="0" tabpos="15">
+		<Cursor position="511" topLine="0" />
+		<BrowseMarks positions="279,308,345,486,642,644" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="main.c" open="0" top="0" tabpos="0">
+		<Cursor position="2" topLine="0" />
+	</File>
+	<File name="EventLoopThread.h" open="0" top="0" tabpos="13">
+		<Cursor position="468" topLine="4" />
+		<BrowseMarks positions="" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="InetAddress.cpp" open="0" top="0" tabpos="8">
+		<Cursor position="503" topLine="67" />
+		<BrowseMarks positions="476" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Channel.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="844" topLine="0" />
+		<BrowseMarks positions="787" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Channel.h" open="0" top="0" tabpos="10">
+		<Cursor position="2686" topLine="27" />
+		<BrowseMarks positions="142,233,351,491,691,698,750,952,954,2142,2177,2212,2214,2688,2721" />
+	</File>
+	<File name="thread_test.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="882" topLine="0" />
+	</File>
+	<File name="EventLoop.cpp" open="1" top="1" tabpos="9">
+		<Cursor position="2751" topLine="78" />
+		<BrowseMarks positions="23,25,848,1359,1924,2135,2225,2262,2902" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="EventLoop.h" open="1" top="0" tabpos="11">
+		<Cursor position="1069" topLine="29" />
+		<BrowseMarks positions="62,1054" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="EventLoopThread.cpp" open="0" top="0" tabpos="14">
+		<Cursor position="630" topLine="15" />
+		<BrowseMarks positions="202,307,327,337,377,397,991,1079,1267" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="mutex_cond_test.c" open="0" top="0" tabpos="0">
+		<Cursor position="228" topLine="0" />
+	</File>
+	<File name="Epoll.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="962" topLine="99" />
+		<BrowseMarks positions="107,710,836,938,940,1295,3069" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Epoll.h" open="0" top="0" tabpos="3">
+		<Cursor position="364" topLine="12" />
+		<BrowseMarks positions="362" />
+	</File>
+	<File name="MutexLock.h" open="0" top="0" tabpos="0">
+		<Cursor position="1019" topLine="24" />
+	</File>
+	<File name="TcpConnnection.h" open="1" top="0" tabpos="4">
+		<Cursor position="3374" topLine="82" />
+		<BrowseMarks positions="2914,2966,3016,3071,3099,3129,3186,3201,3288,3336,3356,3392,3539,3584,3623,3674,3725,3788,3841,3847" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="TcpConnnection.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="5952" topLine="336" />
+		<BrowseMarks positions="6278,6319" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="TcpServer.h" open="1" top="0" tabpos="3">
+		<Cursor position="867" topLine="14" />
+		<BrowseMarks positions="" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="InetAddress.h" open="0" top="0" tabpos="1">
+		<Cursor position="416" topLine="6" />
+		<BrowseMarks positions="83,194,307,582,178,416" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Thread.cpp" open="0" top="0" tabpos="8">
+		<Cursor position="2688" topLine="68" />
+		<BrowseMarks positions="1573,2666" />
+		<Book_Marks positions="" />
+	</File>
+	<File name="Socket.cpp" open="1" top="0" tabpos="10">
+		<Cursor position="122" topLine="123" />
+		<BrowseMarks positions="116,118,722,776,779,812,1083,5137,1060,1013" />
+		<Book_Marks positions="929" />
+	</File>
+</BrowseTracker_layout_file>

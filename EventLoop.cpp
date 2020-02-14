@@ -1,9 +1,5 @@
 #include"EventLoop.h"
-#include<sys/eventfd.h>
 
-#include<unistd.h>
-
-#include<algorithm>
 #include<signal.h>
 namespace detail
 {
