@@ -302,25 +302,25 @@ void TcpConnection::handleRead(size_t receiveTime)
     int savedErrno =0;
     ssize_t n = inputBuffer_.readFd(socket_->fd(),&savedErrno);
     if(n>0){
-	printf("messageCallback  %zd  \n",inputBuffer_.readableBytes());
+	//printf("messageCallback  %zd  \n",inputBuffer_.readableBytes());
 
         messageCallback_(shared_from_this(),&inputBuffer_,receiveTime);
     }else if(n == 0){
 	//
-	printf("read 0\n");
+	//printf("read 0\n");
         handleClose();
 
     }else{
         errno = savedErrno;
         //LOG<<"TcpConnection::handleRead  error";
-        printf("TcpConnection::handleRead  error \n");
+        //printf("TcpConnection::handleRead  error \n");
         handleError();
     }
 }
 
 void TcpConnection::handleWrite()
 {
-    printf("conn write\n");
+    //printf("conn write\n");
     loop_->assertInLoopThread();
     if(channel_->isWriting())
     {

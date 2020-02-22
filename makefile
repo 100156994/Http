@@ -7,7 +7,7 @@ OBJS   :=$(patsubst %.cpp,%.o,$(SOURCE))
 TARGET  :=HttpServer
 LIBS    := -lpthread
 #INCLUDE:= -I./usr/local/lib
-CFLAGS  := -std=c++11 -g -Wall 
+CFLAGS  := -std=c++11 -g -Wall -O2
 
 
 TEST_1:=test_log
