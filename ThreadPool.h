@@ -1,13 +1,14 @@
 #pragma once
 
 #include<string>
-#include<function>
+#include<functional>
 #include<vector>
 #include<deque>
 #include"Thread.h"
 #include"noncopyable.h"
 #include"MutexLock.h"
 #include"Condition.h"
+#include<memory>
 
 using std::string;
 
@@ -36,13 +37,13 @@ public:
 private:
     bool isFull()const;
     void runInThread();
-    void take();
-    MutexLock mutex_;
+    Task take();
+    mutable MutexLock mutex_;
     Condition notFull_;
     Condition notEmpty_;
     string name_;
     Task threadInitCallback_;
-    std::vector<unique_ptr<Thread>> threads_;
+    std::vector<std::unique_ptr<Thread>> threads_;
     std::deque<Task> queue_;
     size_t maxQueueSize_;
     bool running_;

@@ -2,25 +2,27 @@
 #include "EventLoopThread.h"
 #include <stdio.h>
 
+//测试跨线程调用 run 和runafter
+
 void runInThread()
 {
-  printf("runInThread(): pid = %d, tid = %d\n",
-         getpid(), CurrentThread::tid());
+    printf("runInThread(): pid = %d, tid = %d\n",
+           getpid(), CurrentThread::tid());
 }
 
 int main()
 {
-  printf("main(): pid = %d, tid = %d\n",
-         getpid(), CurrentThread::tid());
+    printf("main(): pid = %d, tid = %d\n",
+           getpid(), CurrentThread::tid());
 
-  EventLoopThread loopThread;
-  EventLoop* loop = loopThread.startLoop();
-  loop->runInLoop(runInThread);
-  sleep(1);
-  loop->runAfter(2, runInThread);
-  sleep(3);
-  loop->quit();
+    EventLoopThread loopThread;
+    EventLoop* loop = loopThread.startLoop();
+    loop->runInLoop(runInThread);
+    sleep(1);
+    loop->runAfter(2, runInThread);
+    sleep(3);
+    loop->quit();
 
-  printf("exit main().\n");
+    printf("exit main().\n");
 }
 

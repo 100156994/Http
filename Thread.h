@@ -2,22 +2,23 @@
 
 #include<pthread.h>
 
-#include<functional>
-#include<string>
+
+
+
 #include"CountDownLatch.h"
 #include"noncopyable.h"
-
-
+#include <functional>
+#include<string>
 using std::string;
 
 class Thread : noncopyable{
 public:
     typedef std::function<void()> ThreadFunc;
-    explicit Thread(const ThreadFunc& ,const string& name=string());
+    explicit Thread(const ThreadFunc& cb,const string& name=string());
     ~Thread();
 
     void start();
-    void join();
+    int join();
 
     bool started()const {return started_;}
     //bool joined_()const {return joined_;}

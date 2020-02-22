@@ -5,14 +5,20 @@
 #include"Channel.h"
 #include"TimerQueue.h"
 #include<functional>
-
-
+#include"MutexLock.h"
+#include<memory>
+#include<string>
+#include <unistd.h>
+#include"Logging.h"
 class Epoller;
 class Channel;
 class TimerQueue;
 
-using namespace detail;
+using  std::string;
 
+
+//一个线程只能有一个loop  跨线程调用使用锁保护  处理完所有epoll所有活动时间后  才会执行跨线程任务  不会递归添加，而是异步唤醒下一轮执行
+//有一个定时器队列 和异步唤醒channel fd(由loop本身负责关闭)
 class EventLoop
 {
 public:
@@ -23,8 +29,8 @@ public:
 
     //只能在创建线程调用
     void loop();
-    void runInLoop(Functor& cb);
-    void queueInLoop(Functor& cb);
+    void runInLoop(Functor cb);
+    void queueInLoop(Functor cb);
     size_t queueSize()const ;
 
     void quit();//跨线程调用有一定问题
@@ -55,7 +61,7 @@ public:
             abortNotInLoopThread();
         }
     }
-    static EventLoop* getEventLoopOfCurrentThead();
+    static EventLoop* getEventLoopOfCurrentThread();
 private:
     void abortNotInLoopThread();
     void doPendingFunctors();
@@ -82,4 +88,4 @@ private:
 
     mutable MutexLock mutex_;
     std::vector<Functor> pendingFunctors_;
-}
+};

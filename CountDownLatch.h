@@ -4,6 +4,8 @@
 #include"Condition.h"
 #include"noncopyable.h"
 
+
+//倒计时 用于创建线程前先初始化一些线程独有变量和线程ID
 class CountDownLatch{
 
 public:

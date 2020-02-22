@@ -1,7 +1,7 @@
 
 #include"EventLoopThreadPool.h"
 #include"EventLoopThread.h"
-
+#include"EventLoop.h"
 #include<stdio.h>
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop, const string& nameArg)
@@ -29,7 +29,8 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
     {
         char buf[name_.size() + 32];
         snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
-        threads_.push_back(std::unique_ptr<EventLoopThread>(new EventLoopThread(cb, buf)));
+        EventLoopThread* t = new EventLoopThread(cb, buf);
+        threads_.push_back(std::unique_ptr<EventLoopThread>(t));
         loops_.push_back(t->startLoop());
     }
     if (numThreads_ == 0 && cb)
@@ -56,6 +57,7 @@ EventLoop* EventLoopThreadPool::getNextLoop()
             next_=0;
         }
     }
+    return loop;
 }
 
 std::vector<EventLoop*> EventLoopThreadPool::getAllLoops()

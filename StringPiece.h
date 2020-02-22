@@ -2,7 +2,11 @@
 #include <string.h>
 #include <iosfwd>    // for ostream forward-declaration
 
+#include<string>
 
+
+//取自 muduo  StringPiece 像一个窗口 避免字符串拷贝 并且统一string  和C风格字符串
+using std::string;
 
 // For passing C-style string argument to a function.
 class StringArg // copyable

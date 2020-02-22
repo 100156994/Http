@@ -1,10 +1,17 @@
 #pragma once
 
 #include"noncopyable.h"
-
+#include<string>
+#include<vector>
+#include<functional>
+#include <memory>
+using std::string;
+using std::vector;
 class EventLoopThread;
 class EventLoop;
 
+
+//loop线程池  轮训获取线程  
 class EventLoopThreadPool : noncopyable
 {
 public:

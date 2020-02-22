@@ -3,17 +3,17 @@
 #include "EventLoop.h"
 
 #include <sstream>
-
+#include"Logging.h"
 
 const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = POLLIN | POLLPRI;
-const int Channel::kWriteEvent = POLLOUT;
+const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
+const int Channel::kWriteEvent = EPOLLOUT;
 
 Channel::Channel(EventLoop* loop, int fd)
-    :loop_(loop_),
-     fd(fd),
-     event_(0),
-     revent_(0),
+    :loop_(loop),
+     fd_(fd),
+     events_(0),
+     revents_(0),
      index_(-1),
      eventHandling_(false),
      addedToLoop_(false)
@@ -23,43 +23,53 @@ Channel::Channel(EventLoop* loop, int fd)
 
 Channel::~Channel()
 {
-  assert(!eventHandling_);
-  assert(!addedToLoop_);
-  if (loop_->isInLoopThread())
-  {
-    assert(!loop_->hasChannel(this));
-  }
+    //connector的channel写事件时 会reset channel 所以把reset放到pendingfunc中执行  然后把fd暴露给客户 这是正在处理channel 所以channel析构 这样导致handle时 自身析构
+    //printf("~ %d\n",fd_);
+    assert(!eventHandling_);
+    //客户析构时候connector 的channel析构时 
+    //assert(!addedToLoop_);
+    if (loop_->isLoopInThread())
+    {
+    	//assert(!loop_->hasChannel(this));
+    }
 }
 
-Channel::handleEvent(size_t receiveTime)
+void Channel::handleEvent(size_t receiveTime)
 {
     eventHandling_ = true;
+    //printf("handle Event %d\n",fd_);
     if ((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN))
     {
         //对方挂断且无数据可读
         events_ = 0;
         //log
-        if(CloseCallback) CloseCallback();
-        return;
+        //printf("close callback\n");
+        //LOG<<"HUP "<<revents_;
+        
+	if(closeCallback_) closeCallback_();
+        //return;
     }
     if (revents_ & EPOLLERR)
     {
-        if (errorHandler_)
-            errorHandler_();
+        if (errorCallback_)
+            errorCallback_;
         events_ = 0;
-        return;
+        //return;
     }
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP))
     {
+        //printf("read %d\n",this->fd());
         if(readCallback_)
             readCallback_(receiveTime);
     }
     if (revents_ & EPOLLOUT)
     {
+	//printf("write \n");
         if(writeCallback_)
             writeCallback_();
     }
     eventHandling_ = false;
+    //printf("handle over\n");
 }
 void Channel::update()
 {
@@ -77,32 +87,34 @@ void Channel::remove()
 
 string Channel::reventsToString() const
 {
-  return eventsToString(fd_, revents_);
+    return eventsToString(fd_, revents_);
 }
 
 string Channel::eventsToString() const
 {
-  return eventsToString(fd_, events_);
+    return eventsToString(fd_, events_);
 }
 
 string Channel::eventsToString(int fd, int ev)
 {
-  std::ostringstream oss;
-  oss << fd << ": ";
-  if (ev & POLLIN)
-    oss << "IN ";
-  if (ev & POLLPRI)
-    oss << "PRI ";
-  if (ev & POLLOUT)
-    oss << "OUT ";
-  if (ev & POLLHUP)
-    oss << "HUP ";
-  if (ev & POLLRDHUP)
-    oss << "RDHUP ";
-  if (ev & POLLERR)
-    oss << "ERR ";
-  if (ev & POLLNVAL)
-    oss << "NVAL ";
+    std::ostringstream oss;
+    oss << fd << ": ";
+    if (ev & EPOLLIN)
+      oss << "IN ";
+    if (ev & EPOLLPRI)
+      oss << "PRI ";
+    if (ev & EPOLLOUT)
+     oss << "OUT ";
+    if (ev & EPOLLHUP)
+      oss << "HUP ";
+    if (ev & EPOLLRDHUP)
+      oss << "RDHUP ";
+    if (ev & EPOLLERR)
+      oss << "ERR ";
+    if (ev & EPOLLET)
+      oss << "ET ";
+    if(ev & EPOLLONESHOT)
+      oss << "ONESHOT ";
 
-  return oss.str();
+    return oss.str();
 }

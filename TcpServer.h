@@ -1,17 +1,24 @@
 #pragma once
 
 #include"noncopyable.h"
+#include"TcpConnection.h"
 #include"Callback.h"
 #include<string>
+#include"InetAddress.h"
+#include<map>
+#include"EventLoopThreadPool.h"
 
+using std::string;
 
-using namespace std::string
 
 class EventLoop;
 class Acceptor;
 
+class EventLoopThreadPool;
 
 
+//server包含一个acceptor 用来监听套接字接受连接 有一个loop线程池用来处理各个连接  map记录现在server所有的连接  连接中有指向loop的指针
+//用atomic_flag来管理server开关
 class TcpServer :noncopyable
 {
 public:

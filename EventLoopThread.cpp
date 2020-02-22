@@ -16,19 +16,19 @@ EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,const string& name
 
 EventLoopThread::~EventLoopThread()
 {
-  exiting_ = true;
-  if (loop_ != NULL) // 主线程要是里进行析构时 如果threadFunc刚刚执行完毕 则有可能判断成功 但之后loop_为NULL
-  {
-    // 虽然有小几率竞争 但是析构时候程序应该直接退出了 不影响
-    loop_->quit();
-    thread_.join();
-  }
+    exiting_ = true;
+    if (loop_ != NULL) // 主线程要是里进行析构时 如果threadFunc刚刚执行完毕 则有可能判断成功 但之后loop_为NULL
+    {
+      // 虽然有小几率竞争 但是析构时候程序应该直接退出了 不影响
+      loop_->quit();
+      thread_.join();
+    }
 }
 
 
 EventLoop* EventLoopThread::startLoop()
 {
-    assert(!thread_.start());
+    assert(!thread_.started());
     thread_.start();
     EventLoop* loop = NULL;
     {
@@ -43,13 +43,13 @@ EventLoop* EventLoopThread::startLoop()
 }
 
 
-void EventLoopThread::ThreadFunc()
+void EventLoopThread::threadFunc()
 {
     EventLoop loop;
 
     if(callback_)
     {
-        callback();
+        callback_(&loop);
     }
     {
     MutexLockGuard lock(mutex_);

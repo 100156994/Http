@@ -6,70 +6,73 @@
 std::string message1;
 std::string message2;
 
+//连续发送 测试conn->send  缓冲发送
+
 void onConnection(const TcpConnectionPtr& conn)
 {
-  if (conn->connected())
-  {
-    printf("onConnection(): tid=%d new connection [%s] from %s\n",
-           CurrentThread::tid(),
-           conn->name().c_str(),
-           conn->peerAddress().toHostPort().c_str());
-    if (!message1.empty())
-      conn->send(message1);
-    if (!message2.empty())
-      conn->send(message2);
-    conn->shutdown();
-  }
-  else
-  {
-    printf("onConnection(): tid=%d connection [%s] is down\n",
-           CurrentThread::tid(),
-           conn->name().c_str());
-  }
+    if (conn->connected())
+    {
+        printf("onConnection(): tid=%d new connection [%s] from %s\n",
+               CurrentThread::tid(),
+               conn->name().c_str(),
+               conn->peerAddress().toIpPort().c_str());
+        if (!message1.empty())
+            conn->send(message1);
+        if (!message2.empty())
+            conn->send(message2);
+        conn->shutdown();
+    }
+    else
+    {
+        printf("onConnection(): tid=%d connection [%s] is down\n",
+               CurrentThread::tid(),
+               conn->name().c_str());
+    }
 }
 
 void onMessage(const TcpConnectionPtr& conn,
                Buffer* buf,
                size_t receiveTime)
 {
-  printf("onMessage(): tid=%d received %zd bytes from connection [%s] at %zd\n",
-         CurrentThread::tid(),
-         buf->readableBytes(),
-         conn->name().c_str(),
-         receiveTime);
+    printf("onMessage(): tid=%d received %zd bytes from connection [%s] at %zd\n",
+           CurrentThread::tid(),
+           buf->readableBytes(),
+           conn->name().c_str(),
+           receiveTime);
 
-  buf->retrieveAll();
+    buf->retrieveAll();
 }
 
 int main(int argc, char* argv[])
 {
-  printf("main(): pid = %d\n", getpid());
+    printf("main(): pid = %d\n", getpid());
 
-  int len1 = 100;
-  int len2 = 200;
+    int len1 = 100;
+    int len2 = 200;
 
-  if (argc > 2)
-  {
-    len1 = atoi(argv[1]);
-    len2 = atoi(argv[2]);
-  }
+    if (argc > 2)
+    {
+        len1 = atoi(argv[1]);
+        len2 = atoi(argv[2]);
+    }
 
-  message1.resize(len1);
-  message2.resize(len2);
-  std::fill(message1.begin(), message1.end(), 'A');
-  std::fill(message2.begin(), message2.end(), 'B');
+    message1.resize(len1);
+    message2.resize(len2);
+    std::fill(message1.begin(), message1.end(), 'A');
+    std::fill(message2.begin(), message2.end(), 'B');
 
-  InetAddress listenAddr(9981);
-  EventLoop loop;
+    InetAddress listenAddr(9981);
+    EventLoop loop;
 
-  TcpServer server(&loop, listenAddr);
-  server.setConnectionCallback(onConnection);
-  server.setMessageCallback(onMessage);
-  if (argc > 3) {
-    server.setThreadNum(atoi(argv[3]));
-  }
-  server.start();
+    TcpServer server(&loop, listenAddr,"07-server");
+    server.setConnectionCallback(onConnection);
+    server.setMessageCallback(onMessage);
+    if (argc > 3)
+    {
+        server.setThreadNum(atoi(argv[3]));
+    }
+    server.start();
 
-  loop.loop();
+    loop.loop();
 }
 

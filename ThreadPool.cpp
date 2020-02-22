@@ -1,7 +1,7 @@
-#pragma once
+
 
 #include"ThreadPool.h"
-#include<assert>
+#include<assert.h>
 #include<exception>
 #include<stdio.h>
 
@@ -15,7 +15,7 @@ ThreadPool::ThreadPool(const string name)
      {
      }
 
-ThreadPool::~ThreadPool
+ThreadPool::~ThreadPool()
 {
     if(running_)
     {
@@ -23,22 +23,23 @@ ThreadPool::~ThreadPool
     }
 }
 
-ThreadPool::start(int numThread)
+void ThreadPool::start(int numThread)
 {
     assert(threads_.empty());
-    assert(running_)
+    assert(running_);
     running_ = true;
     threads_.reserve(numThread);
     for( int i = 0; i < numThread ;++i)
     {
         char id[32];
-        snprintf(id,sizeof id,"%d",i+1)
-        threads_.emplace_back(new Thread(std::bind(ThreadPool::runInThread(),this),name+id));
+        snprintf(id,sizeof id,"%d",i+1);
+
+        threads_.emplace_back(new Thread(std::bind(&ThreadPool::runInThread,this),name_+id));
         threads_[i]->start();
     }
 }
 
-ThreadPool::run(const Task& f)
+void ThreadPool::run(const Task f)
 {
     if(threads_.empty())
     {
@@ -56,11 +57,11 @@ ThreadPool::run(const Task& f)
     }
 }
 
-ThreadPool::stop()
+void ThreadPool::stop()
 {
     MutexLockGuard lock(mutex_);
     running_ = false;
-    notEmpty.notifyAll();
+    notEmpty_.notifyAll();
     //等待所有线程结束
     for(auto& thr:threads_)
     {
@@ -69,17 +70,17 @@ ThreadPool::stop()
 }
 
 //添加任务时调用
-ThreadPool::isFull()
+bool ThreadPool::isFull()const
 {
-    return  maxQueueSize>0 && maxQueueSize >= queue_.size();
+    return  maxQueueSize_>0 && maxQueueSize_ >= queue_.size();
 }
 
 
-ThreadPool::runInThread()
+void ThreadPool::runInThread()
 {
     try
     {
-        assert(running_)
+        assert(running_);
         if(threadInitCallback_)
         {
             threadInitCallback_();
@@ -104,7 +105,7 @@ ThreadPool::runInThread()
     }
 }
 
-ThreadPool::take()
+ThreadPool::Task ThreadPool::take()
 {
     MutexLockGuard lock(mutex_);
     while(queue_.empty()&&running_)

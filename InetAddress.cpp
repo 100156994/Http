@@ -6,7 +6,11 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include<stdio.h>
-
+#include<string.h>
+#include <netinet/in.h>
+#include<arpa/inet.h>
+#include<assert.h>
+#include"Logging.h"
 //     /* Structure describing an Internet socket address.  */
 //     struct sockaddr_in {
 //         sa_family_t    sin_family; /* address family: AF_INET */
@@ -20,24 +24,25 @@
 //         in_addr_t       s_addr;     /* address in network byte order */
 //     };
 
-namespace socket
+namespace mysocket
 {
 void fromIpPort(const char* ip, uint16_t port, struct sockaddr_in* addr)
 {
-    addr->family = AF_INET:
+    addr->sin_family = AF_INET;
     addr->sin_port = htobe16(port);
     if(inet_pton(AF_INET,ip,&addr->sin_addr)<=0)
     {//log
-        printf("fromIpport error\n");
+	//LOG<<"fromIpport error";
+        //printf("fromIpport error\n");
     }
 };
 
 }
 
 
-using namespace socket;
+using namespace mysocket;
 
-InetAddress::InetAddress(uint16_t port,bool loopbackOnly = false)
+InetAddress::InetAddress(uint16_t port,bool loopbackOnly )
 {
     memset(&addr_,0,sizeof(addr_));
     addr_.sin_family = AF_INET;
@@ -55,20 +60,19 @@ InetAddress::InetAddress(string ip,uint16_t port)
 }
 
 
-string InetAddress::toIp()
+string InetAddress::toIp()const
 {
     char buf[64] = "";
-    assert(64==INET_ADDRSTRLEN);
-    inet_ntop(AF_INET,&addr_->sin_addr,buf,INET_ADDRSTRLEN);
+    assert(64>INET_ADDRSTRLEN);
+    //printf("INET_ADDRSTRLEN=%d\n",INET_ADDRSTRLEN);
+    inet_ntop(AF_INET,&(addr_.sin_addr),buf,INET_ADDRSTRLEN);
     return buf;
 }
 
-string InetAddress::toIpPort()
+string InetAddress::toIpPort()const
 {
     string ret;
     ret = toIp();
-    size_t len = ::strlen(buf);
-  const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
     uint16_t port = toPort();
     char buf[64] = "";
     snprintf(buf, 64, ":%u", port);
@@ -76,12 +80,12 @@ string InetAddress::toIpPort()
     return ret;
 }
 
-uint16_t InetAddress::toPort()
+uint16_t InetAddress::toPort()const
 {
-    return betoh16(portNetEndian())
+    return be16toh(portNetEndian());
 }
 
-static __thread char t_resolveBuffer[8192];//线程缓冲
+static __thread char t_resolveBuffer[8192];//线程缓冲  保证获取hostname线程安全
 
 bool InetAddress::resolve(string hostname, InetAddress* result)
 {
@@ -100,7 +104,7 @@ bool InetAddress::resolve(string hostname, InetAddress* result)
     }else{
         if(ret)
         {//log
-            printf("InetAddress::resolve\n");
+            //LOG<<"InetAddress::resolve";
         }
         return false;
     }

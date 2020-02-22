@@ -4,7 +4,24 @@
 #include"InetAddress.h"
 
 
+
+namespace mysocket
+{
+int createNonblockingOrDie(sa_family_t family);
+struct sockaddr_in getLocalAddr(int sockfd);
+struct sockaddr_in getPeerAddr(int sockfd);
+bool isSelfConnect(int sockfd);
+int socketsListen(int sockfd);
+
+int socketAccept(int sockfd, sockaddr_in* addr_in);
+void setNonBlockAndCloseOnExec(int sockfd);
+int createNonblockingOrDie(sa_family_t family);
+struct sockaddr_in getLocalAddr(int sockfd);
+}
+
+
 class InetAddress;
+
 
 class Socket : noncopyable
 {
@@ -41,8 +58,4 @@ private:
 };
 
 
-namespace socket
-{
-int createNonblockingOrDie(sa_family_t family);
-struct sockaddr_in getLocalAddr(int sockfd);
-}
+

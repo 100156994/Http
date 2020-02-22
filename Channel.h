@@ -2,10 +2,12 @@
 #pragma once
 #include<functional>
 #include"noncopyable.h"
-
+#include<string>
 class EventLoop;
 
-//负责一个fd的事件分发 但不负责fd的关闭
+
+using std::string;
+//负责一个fd的事件分发 但不负责fd的关闭  fd的关闭有Socket控制
 class Channel : noncopyable
 {
 public:
@@ -52,12 +54,14 @@ public:
     //for debug
     string reventsToString() const;
     string eventsToString() const;
+
     EventLoop* ownerLoop()
     {
         return loop_;
     }
     void remove();
 private:
+    static string eventsToString(int fd,int ev);
     void update();
     static const int kNoneEvent;
     static const int kReadEvent;
@@ -65,8 +69,8 @@ private:
 
     EventLoop* loop_;
     const int fd_;
-    int event_;
-    int revent_;
+    int events_;
+    int revents_;
     int index_;//epoller中map的key
 
     bool eventHandling_;

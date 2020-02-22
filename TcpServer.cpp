@@ -5,9 +5,9 @@
 #include"InetAddress.h"
 #include"Socket.h"
 #include<stdio.h>
-#include"TcpConnnection.h"
-
-using namespace socket;
+#include"TcpConnection.h"
+#include"Logging.h"
+using namespace mysocket;
 
 TcpServer::TcpServer(EventLoop* loop, const InetAddress& listenAddr, const string& nameArg, Option option)
     :loop_(loop),
@@ -18,7 +18,7 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& listenAddr, const strin
      started_(ATOMIC_FLAG_INIT),
      nextConnId_(1)
 {
-    acceptor_->setNewConnectionCallback(std::bind(&TcpServer::newConnection,this,_1,_2);
+    acceptor_->setNewConnectionCallback(std::bind(&TcpServer::newConnection,this,_1,_2));
 }
 
 
@@ -26,15 +26,16 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& listenAddr, const strin
 TcpServer::~TcpServer()
 {
     loop_->assertInLoopThread();
-    ///LOG_TRACE << "TcpServer::~TcpServer [" << name_ << "] destructing";
-    printf("TcpServer::~TcpServer\n");
+
+    //LOG << "TcpServer::~TcpServer [" << name_ << "] destructing";
+    //printf("TcpServer::~TcpServer\n");
 
     for (auto& item : connections_)
     {
         TcpConnectionPtr conn(item.second);
-        item.second.reset();//释放map里的coon
+        item.second.reset();//释放map里的coonptr
         conn->getLoop()->runInLoop(
-        std::bind(&TcpConnection::connectDestroyed, conn));//在conn对于loop池里线程里摧毁
+        std::bind(&TcpConnection::connectDestroyed, conn));//在conn对应loop池里线程里 摧毁连接 
     }
 }
 
@@ -51,7 +52,7 @@ void TcpServer::start()
   {
     threadPool_->start(threadInitCallback_);
 
-    assert(!acceptor_->listenning());
+    assert(!acceptor_->listening());
     loop_->runInLoop(
         std::bind(&Acceptor::listen, acceptor_.get()));
   }
@@ -67,11 +68,16 @@ void TcpServer::newConnection(int sockfd,const InetAddress& peerAddr)
     ++nextConnId_;
     string connName = name_+buf;
 
-    InetAddress localAddr(sockets::getLocalAddr(sockfd));
-    ///log
-    printf("TcpServer::newConnection [%s] - new connection [%s] from %s",name_.c_str(),connName.c_str(),peerAddr.toIpPort().c_str());
-    TcpConnectionPtr conn(new TcpConnection(ioloop,connName,sockfd,localAddr,peerAddr));
+    InetAddress localAddr(mysocket::getLocalAddr(sockfd));
+    
+    //LOG<<"TcpServer::newConnection ["<<name_.c_str()<<"] - new connection ["<<connName.c_str()<<"] from "<<peerAddr.toIpPort().c_str();
+    
+    //printf("TcpServer::newConnection [%s] - new connection [%s] from %s\n",name_.c_str(),connName.c_str(),peerAddr.toIpPort().c_str());
+    TcpConnectionPtr conn(new TcpConnection(ioLoop,connName,sockfd,localAddr,peerAddr));
     connections_[connName] = conn;
+
+    conn->setTcpNoDelay(true);     
+
     conn->setConnectionCallback(connectionCallback_);
     conn->setMessageCallback(messageCallback_);
     conn->setWriteCompleteCallback(writeCompleteCallback_);
@@ -89,10 +95,11 @@ void TcpServer::removeConnection(const TcpConnectionPtr& conn)
 void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn)
 {
     loop_->assertInLoopThread();
-    ///log
-    printf("TcpServer::removeConnectionInLoop [%s] - connection %s\n",name_.c_str(),conn->name().c_str());
-    size_t n = connections_.earse(conn->name());
+    
+    //LOG<<"TcpServer::removeConnectionInLoop ["<<name_.c_str()<<"] - connection ["<<conn->name().c_str()<<"]";
+    //printf("TcpServer::removeConnectionInLoop [%s] - connection %s\n",name_.c_str(),conn->name().c_str());
+    size_t n = connections_.erase(conn->name());
     assert(n ==1);
     EventLoop* ioLoop = conn->getLoop();
-    ioLoop->queueInLoop(&TcpConnection::connectDestroyed,conn);
+    ioLoop->queueInLoop(std::bind(&TcpConnection::connectDestroyed,conn));
 }

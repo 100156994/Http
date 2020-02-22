@@ -5,6 +5,7 @@
 
 class Timer;
 
+//Timer*+sequence_ 唯一标识一个timer 即使timer过期
 class TimerId
 {
 public:

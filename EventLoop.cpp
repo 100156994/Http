@@ -1,8 +1,17 @@
 #include"EventLoop.h"
-
+#include<sys/eventfd.h>
+#include<unistd.h>
+#include<algorithm>
+#include <inttypes.h>  
 #include<signal.h>
+
+using namespace detail;
+
 namespace detail
 {
+    //const int kMicroSecondsPerSecond = 1000000;
+
+  
     int createEventfd()
     {
         int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
@@ -13,20 +22,20 @@ namespace detail
         return evtfd;
     }
 
-    void writeEventfd()
+    void writeEventfd(int wakeupFd)
     {
         uint64_t one = 1;
-        ssize_t n = sockets::write(wakeupFd_, &one, sizeof(one));
+        ssize_t n = write(wakeupFd, &one, sizeof(one));
         if (n != sizeof(one))
         {
             //LOG_ERROR
         }
     }
 
-    void readEventfd()
+    void readEventfd(int wakeupFd)
     {
         uint64_t one = 1;
-        ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
+        ssize_t n = read(wakeupFd, &one, sizeof one);
         if (n != sizeof one)
         {
             //LOG_ERROR
@@ -67,6 +76,7 @@ EventLoop::EventLoop()
     if(t_loopInThisThread)//当前线程已经有一个loop了
     {
         //log
+	//LOG<<"this thread already has a loop";
     }else
     {
         t_loopInThisThread = this;
@@ -94,13 +104,13 @@ void EventLoop::loop()
     quit_ = false;
     while(!quit_){
         activeChannels_.clear();
-        size_t receiveTime = poller_.poll(kPollTimeMs,&activeChannels_);
+        size_t receiveTime = poller_->poll(kPollTimeMs,&activeChannels_);
 
         eventHanding_ = true;
         for(Channel* channel:activeChannels_)
         {
             currentActiveChannel_ = channel;
-            channel.handleEvent(receiveTime);
+            channel->handleEvent(receiveTime);
         }
         eventHanding_ = false;
         doPendingFunctors();
@@ -109,7 +119,7 @@ void EventLoop::loop()
     looping_ = false;
 }
 
-void EventLoop::runInLoop(Functor& cb)
+void EventLoop::runInLoop(Functor cb)
 {
     if(isLoopInThread())
     {
@@ -119,7 +129,7 @@ void EventLoop::runInLoop(Functor& cb)
     }
 }
 
-void EventLoop::queueInLoop(Functor& cb)
+void EventLoop::queueInLoop(Functor cb)
 {
     {
         MutexLockGuard lock(mutex_);
@@ -137,7 +147,7 @@ void EventLoop::quit()
   // 在loop之前 quit 那么在loop线程可能 eventloop正在析构 然后当前线程还在调用这个对象的函数 理论上应该在quit和主线程加锁
   //
 
-  if (!isInLoopThread())
+  if (!isLoopInThread())
   {
     wakeup();
   }
@@ -146,26 +156,26 @@ void EventLoop::quit()
 
 TimerId EventLoop::runAt(size_t time, TimerCallback cb)
 {
-    timerQueue_->addTimer(cb,time,0.0);
+    return timerQueue_->addTimer(cb,time,0.0);
 }
 TimerId EventLoop::runAfter(double delay, TimerCallback cb)
 {
-    timerQueue_->addTimer(cb,addTime(now()+delay),0.0);
+    return timerQueue_->addTimer(cb,addTime(now(),delay),0.0);
 }
 TimerId EventLoop::runEvery(double interval, TimerCallback cb)
 {
-    timerQueue_->addTimer(cb,addTime(now()+interval),interval);
+    return timerQueue_->addTimer(cb,addTime(now(),interval),interval);
 }
 void EventLoop::cancel(TimerId timerId)
 {
-    timerQueue_->cancelTimer(TimerId);
+    timerQueue_->cancelTimer(timerId);
 }
 
 
 void EventLoop::wakeup()//异步唤醒
 {
     //to-do
-    writeEventfd();
+    writeEventfd(wakeupFd_);
 }
 
 void EventLoop::updateChannel(Channel* channel)
@@ -179,7 +189,7 @@ void EventLoop::removeChannel(Channel* channel)
 {
     assertInLoopThread();
     assert(channel->ownerLoop()==this);
-    if (eventHandling_)
+    if (eventHanding_)
     {
         assert(currentActiveChannel_ == channel ||
         std::find(activeChannels_.begin(), activeChannels_.end(), channel) == activeChannels_.end());//这里断言
@@ -191,11 +201,11 @@ bool EventLoop::hasChannel(Channel* channel)
 {
     assertInLoopThread();
     assert(channel->ownerLoop()==this);
-    return poller_>hasChannel(channel);
+    return poller_->hasChannel(channel);
 }
 
 
-EventLoop* EventLoop::getEventLoopOfCurrentThead() //静态成员
+EventLoop* EventLoop::getEventLoopOfCurrentThread() //静态成员
 {
     return t_loopInThisThread;
 }
@@ -204,6 +214,8 @@ EventLoop* EventLoop::getEventLoopOfCurrentThead() //静态成员
 void EventLoop::abortNotInLoopThread()
 {
     //log
+    //LOG<<"abort not in loop thread";
+    abort();
 }
 
 void EventLoop::doPendingFunctors()
@@ -215,14 +227,16 @@ void EventLoop::doPendingFunctors()
         MutexLockGuard lock(mutex_);
         functors.swap(pendingFunctors_);
     }
+    //printf("do func\n");
     for(const Functor& functor:functors)
     {
         functor();
     }
     callPendingFunctors_ =false;
+    //printf("finish func\n");
 }
 
 void EventLoop::handleRead()
 {
-    readEventfd();
+    readEventfd(wakeupFd_);
 }
